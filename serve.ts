@@ -1,8 +1,8 @@
-// A tiny static file server for trying the app locally (Node 22, stdlib only).
-// Serves the app/ folder on http://localhost:8080 by default:
-//   node serve.ts [--port 8080]
-// It only ever serves files from inside app/, and sends the MIME types a browser
-// needs for HTML, CSS, JS, images and fonts. A development convenience, nothing more.
+// Vice Heat Cover Studio — local static server (serve.ts).
+// Development convenience only: `node serve.ts` serves app/ on
+// http://localhost:8080 so the cover maker can be tried in desktop Chrome
+// with no build step. Standard library only; refuses every path that would
+// escape app/; sends the MIME types an offline app needs (fonts included).
 
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
@@ -10,12 +10,10 @@ import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('./app', import.meta.url)));
-const args = process.argv.slice(2);
-const portIndex = args.indexOf('--port');
-const wanted = portIndex === -1 ? 8080 : Number(args[portIndex + 1]);
-const port = Number.isInteger(wanted) && wanted > 0 && wanted < 65536 ? wanted : 8080;
+const portArg = process.argv.indexOf('--port');
+const port = portArg === -1 ? 8080 : Number(process.argv[portArg + 1]) || 8080;
 
-const MIME = {
+const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8',
@@ -24,43 +22,41 @@ const MIME = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
-  '.woff': 'font/woff',
   '.ttf': 'font/ttf',
-  '.otf': 'font/otf',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
 };
 
-const server = createServer((req, res) => {
-  const raw = decodeURIComponent((req.url ?? '/').split('?')[0]);
-  const rel = normalize(raw === '/' ? '/index.html' : raw).replace(/^(\.\.[/\\])+/, '');
-  const file = join(root, rel);
-  if (!file.startsWith(root + sep) && file !== root) {
-    res.writeHead(403);
-    res.end('forbidden');
-    return;
-  }
-  let stat;
+createServer((request, response) => {
+  let pathname = '/';
   try {
-    stat = statSync(file);
+    pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://127.0.0.1').pathname);
   } catch {
-    res.writeHead(404);
-    res.end('not found');
+    response.writeHead(400).end('bad request');
     return;
   }
-  if (!stat.isFile()) {
-    res.writeHead(404);
-    res.end('not found');
+  if (pathname.endsWith('/')) pathname += 'index.html';
+  const file = resolve(join(root, normalize(pathname)));
+  if (file !== root && !file.startsWith(root + sep)) {
+    response.writeHead(403).end('forbidden');
     return;
   }
-  res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' });
-  createReadStream(file).pipe(res);
-});
-
-server.listen(port, () => {
-  console.log('Vice Coast Cover Studio at http://localhost:' + port);
+  let size;
+  try {
+    const stats = statSync(file);
+    if (!stats.isFile()) throw new Error('not a file');
+    size = stats.size;
+  } catch {
+    response.writeHead(404).end('not found');
+    return;
+  }
+  response.writeHead(200, {
+    'content-type': MIME_TYPES[extname(file).toLowerCase()] ?? 'application/octet-stream',
+    'content-length': size,
+    'cache-control': 'no-store',
+  });
+  createReadStream(file).pipe(response);
+}).listen(port, '127.0.0.1', () => {
+  console.log(`Vice Heat Cover Studio is on http://localhost:${port}`);
 });

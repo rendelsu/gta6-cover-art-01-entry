@@ -1,111 +1,122 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Coast Cover Studio — turn any photo into GTA-style cover art</title>
+<title>Vice Heat Cover Studio — GTA-style cover art from your photos</title>
 <link rel="stylesheet" href="style.css">
+<link rel="preload" href="fonts/Anton-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="fonts/Pacifico-Regular.ttf" as="font" type="font/ttf" crossorigin>
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <span class="brand-mark">VC</span>
+    <span class="brand-mark">VH</span>
     <div>
-      <h1>VICE COAST <span>Cover Studio</span></h1>
-      <p>Turn any photo into a Vice City sunset poster — offline, in your browser.</p>
+      <h1>Vice Heat Cover Studio</h1>
+      <p>Your photos, turned into GTA-style cover art. 100% offline — photos never leave your machine.</p>
     </div>
   </div>
   <div class="top-actions">
-    <button id="btnRandom" class="btn ghost" type="button" title="Shuffle a fresh look">Surprise me</button>
-    <button id="btnUndo" class="btn ghost" type="button" title="Undo (Ctrl+Z)">Undo</button>
-    <button id="btnRedo" class="btn ghost" type="button" title="Redo (Ctrl+Y)">Redo</button>
-    <button id="btnExportAll" class="btn primary" type="button">Export all sizes</button>
+    <button id="shuffleBtn" type="button" title="Random layout + grade">Shuffle</button>
+    <button id="undoBtn" type="button" disabled>Undo</button>
+    <button id="redoBtn" type="button" disabled>Redo</button>
   </div>
 </header>
 
 <main class="studio">
-  <section class="stage-wrap">
-    <div class="stage-toolbar">
-      <span id="stageSizeLabel" class="stage-size">1920 × 1080 · 16:9</span>
-      <span class="stage-hint">Click a panel to select it · drag to move the photo · scroll to zoom</span>
+  <section class="photos-col">
+    <h2>1 &middot; Your photos</h2>
+    <div id="dropZone" class="drop-zone">
+      <p><strong>Drop a photo here</strong><br>or pick a sample below — click a photo to put it in the selected panel.</p>
+      <input id="fileInput" type="file" accept="image/*" multiple hidden>
+      <button id="addPhotoBtn" type="button" onclick="document.getElementById('fileInput').click()">Add your photo</button>
     </div>
-    <div class="stage" id="stage">
-      <canvas id="preview" width="960" height="540"></canvas>
-    </div>
-    <div class="size-row" id="sizeRow" role="group" aria-label="Export size">
-      <button type="button" data-size="1:1">1:1 · 1080×1080</button>
-      <button type="button" data-size="4:5">4:5 · 1080×1350</button>
-      <button type="button" data-size="9:16">9:16 · 1080×1920</button>
-      <button type="button" data-size="16:9" class="active">16:9 · 1920×1080</button>
+    <div id="photoTray" class="photo-tray" aria-label="Photo tray"></div>
+    <p class="hint">Tip: click a panel in the preview to select it, then pick its photo, crop and cast tag.</p>
+  </section>
+
+  <section class="preview-col">
+    <h2>2 &middot; Live preview <span id="sizeLabel" class="size-label"></span></h2>
+    <div class="preview-wrap">
+      <canvas id="preview" width="880" height="880" aria-label="Cover preview"></canvas>
     </div>
     <div class="export-row">
-      <button id="btnExport" class="btn primary big" type="button">Export PNG — one click</button>
-      <p class="export-note">Saved straight to your downloads. Your photos never leave this machine.</p>
+      <button id="exportBtn" type="button" class="primary">Export PNG</button>
+      <button id="exportAllBtn" type="button">Export all 4 sizes</button>
+      <span id="exportStatus" class="export-status" role="status"></span>
     </div>
   </section>
 
-  <aside class="panel">
-    <section class="card" id="photosCard">
-      <h2>1 · Photos</h2>
-      <p class="card-sub">Drop photos anywhere, or pick a slot and load one. Samples are built-in poster art.</p>
-      <div class="slots" id="slots"></div>
-      <div class="photo-actions">
-        <label class="btn ghost file-label">Add your photo
-          <input id="fileInput" type="file" accept="image/*" multiple hidden>
-        </label>
-        <button id="btnSamples" class="btn ghost" type="button">Load 4 samples</button>
-      </div>
-      <div class="crop-box" id="cropBox">
-        <h3 id="cropTitle">Panel 1 · hero photo</h3>
-        <label>Zoom <input id="zoomRange" type="range" min="1" max="3" step="0.01" value="1.2"></label>
-        <label>Move sideways <input id="panXRange" type="range" min="-1" max="1" step="0.01" value="0"></label>
-        <label>Move up / down <input id="panYRange" type="range" min="-1" max="1" step="0.01" value="0"></label>
-        <button id="btnFillPanel" class="btn ghost small" type="button">Fill every panel with this photo</button>
-      </div>
-    </section>
+  <section class="controls-col">
+    <h2>3 &middot; Make it yours</h2>
 
-    <section class="card" id="layoutCard">
-      <h2>2 · Layout</h2>
-      <p class="card-sub">Eight multi-panel poster layouts. The hero can pop out over the title.</p>
-      <div class="layouts" id="layouts"></div>
-    </section>
+    <label class="field">Title
+      <input id="titleInput" type="text" value="VICE HEAT" maxlength="24" autocomplete="off">
+    </label>
+    <label class="field">Subtitle (neon script)
+      <input id="subtitleInput" type="text" value="a Vice City story" maxlength="40" autocomplete="off">
+    </label>
 
-    <section class="card" id="gradeCard">
-      <h2>3 · Vice grade</h2>
-      <p class="card-sub">Neon-sunset colour grades. Slide the glow to taste.</p>
-      <div class="grades" id="grades"></div>
-      <label class="slider-label">Glow intensity
-        <input id="gradeRange" type="range" min="0" max="1.5" step="0.05" value="0.85">
-      </label>
-    </section>
+    <h3>Layout — 9 multi-panel posters</h3>
+    <div id="layoutPicker" class="picker"></div>
 
-    <section class="card" id="letterCard">
-      <h2>4 · Lettering</h2>
-      <p class="card-sub">Bold retro-chrome title, neon script subtitle, cast tags and a billing block.</p>
-      <label class="field">Title
-        <input id="titleInput" type="text" value="VICE COAST" maxlength="24">
+    <h3>Grade — Vice City neon sunset</h3>
+    <div id="gradePicker" class="picker"></div>
+    <label class="field slider-field">Grade intensity <span id="gradeVal">70%</span>
+      <input id="gradeSlider" type="range" min="0" max="1" step="0.05" value="0.7">
+    </label>
+
+    <h3>Selected panel</h3>
+    <p id="panelLabel" class="panel-label">Panel 5 of 9 — Vice Grid</p>
+    <label class="field">Photo in this panel
+      <select id="panelPhoto"></select>
+    </label>
+    <label class="field slider-field">Zoom <span id="panelZoomVal">115%</span>
+      <input id="panelZoom" type="range" min="0.6" max="2.5" step="0.05" value="1.15">
+    </label>
+    <div class="slider-pair">
+      <label class="field slider-field">Move X
+        <input id="panelOx" type="range" min="-1" max="1" step="0.05" value="0">
       </label>
-      <label class="field">Subtitle
-        <input id="subtitleInput" type="text" value="a sunset heist in Vice City" maxlength="48">
+      <label class="field slider-field">Move Y
+        <input id="panelOy" type="range" min="-1" max="1" step="0.05" value="0">
       </label>
-      <label class="field">Starring
-        <input id="starInput" type="text" value="MARA VOSS" maxlength="24">
+    </div>
+    <label class="check"><input id="panelFace" type="checkbox" checked> Face-aware crop — keep faces in frame</label>
+
+    <h3>Cast tag for this panel</h3>
+    <div class="cast-row">
+      <label class="field">Role
+        <input id="castRole" type="text" value="THE DRIVER" maxlength="18" autocomplete="off">
       </label>
-      <label class="field">Featuring
-        <input id="featInput" type="text" value="DANTE REYES" maxlength="24">
+      <label class="field">Name
+        <input id="castName" type="text" value="LUCIA" maxlength="18" autocomplete="off">
       </label>
-      <label class="check"><input id="sealCheck" type="checkbox" checked> Show Vice Coast seal</label>
-      <label class="check"><input id="billingCheck" type="checkbox" checked> Show billing block</label>
-    </section>
-  </aside>
+    </div>
+
+    <h3>Finishing touches</h3>
+    <label class="check"><input id="sealToggle" type="checkbox" checked> Vice City seal stamp</label>
+    <label class="check"><input id="billingToggle" type="checkbox" checked> Movie-poster billing block</label>
+    <label class="field">Heat meter (stars)
+      <select id="heatInput">
+        <option value="3">3 stars</option>
+        <option value="4" selected>4 stars</option>
+        <option value="5">5 stars</option>
+      </select>
+    </label>
+
+    <h3>Post size</h3>
+    <div id="sizePicker" class="picker"></div>
+    <p class="hint">Exports are full-resolution PNGs: 1080&times;1080, 1080&times;1350, 1080&times;1920 and 1920&times;1080.</p>
+  </section>
 </main>
 
 <footer class="foot">
-  <p>Vice Coast Cover Studio — an original poster maker. No Rockstar Games logo, artwork or font is used here.
-  Photos stay on your machine; nothing is uploaded. Fonts Anton &amp; Pacifico ship under the SIL Open Font License.</p>
+  <p>Vice Heat Cover Studio — an original fan-made tool. No Rockstar Games logo, artwork or fonts. Display type: Anton &amp; Pacifico (SIL Open Font License). Sample photos are original procedural art drawn in code.</p>
 </footer>
 
-<input id="slotFileInput" type="file" accept="image/*" hidden>
 <script type="module" src="src/main.js"></script>
+<script type="module" src="src/shots.js"></script>
 </body>
 </html>

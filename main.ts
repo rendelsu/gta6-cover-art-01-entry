@@ -1,8 +1,12 @@
-// Vice Coast Cover Studio — the program that hands the entry in (Node 22, stdlib only).
-// It copies the app/ folder and the screenshots/ folder from beside this file into
-// the output directory and writes /output/dossier.json with the vendored make.fun
-// library, exactly as the kit's starter does. Outside the grader, set
-// MAKEFUN_OUTPUT_DIR to point at a local folder instead of /output:
+// Vice Heat Cover Studio — the entry program (main.ts, Node 22, stdlib only).
+// It hands the app in: copies app/ and screenshots/ from beside this file
+// into /output (or MAKEFUN_OUTPUT_DIR outside the grader) and writes
+// /output/dossier.json with the vendored make.fun library, exactly as the
+// gate rebuilds it. The app itself is plain static files under app/ —
+// index.html plus its scripts, styles, fonts and sample photos — with no
+// build step and no network request.
+//
+// Run it locally to check the handoff before entering:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -16,12 +20,12 @@ const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 mkdirSync(out, { recursive: true });
 cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
-if (existsSync(join(here, 'screenshots'))) {
-  cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
-}
+if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 
-// The gate's own caps for the dossier: text at most 160 KiB, at most 4 screenshots
-// of at most 256 KiB each, app/ at most 993 files and 48 MiB, paths at most 1000 bytes.
+// The scorer's caps (reference/gate.json): the dossier text cap shapes the
+// bytes; the rest refuse an entry the scorer would refuse — more than 4
+// screenshots or one over 256 KiB, more than 993 files in app/ or 48 MiB
+// of app files, or a path under app/ over 1000 bytes.
 writeFileSync(
   join(out, 'dossier.json'),
   buildDossier(out, {
