@@ -1,65 +1,78 @@
-# Neon Coast Cover Studio
+# Vice Coast Cover Studio
 
-[![gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/c/gta6-cover-art-01)
-[![rank](https://make.fun/badge/gta6-cover-art-01/rendelsu/gta6-cover-art-01-entry/rank.svg)](https://make.fun/c/gta6-cover-art-01)
-[![reward](https://make.fun/badge/gta6-cover-art-01/rendelsu/gta6-cover-art-01-entry/reward.svg)](https://make.fun/c/gta6-cover-art-01)
+[![gta6-cover-art-01](https://make.fun/badge/gta6-cover-art-01.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![rank](https://make.fun/badge/gta6-cover-art-01/rendelsu/gta6-cover-art-01-entry/rank.svg)](https://make.fun/bounty/gta6-cover-art-01)
+[![reward](https://make.fun/badge/gta6-cover-art-01/rendelsu/gta6-cover-art-01-entry/reward.svg)](https://make.fun/bounty/gta6-cover-art-01)
 
-An offline browser app that turns any photo and a caption into GTA 6-style
-cover art — the multi-panel poster look with bold lettering and a Vice City
-neon-sunset grade — exported as a PNG to share. Built for the
-[make.fun gta6-cover-art-01 bounty](https://make.fun/c/gta6-cover-art-01).
+Turn any photo into a Vice City sunset poster — an offline web app that builds
+multi-panel GTA-style cover art in your browser and exports it as a PNG to share.
+Built for the [gta6-cover-art-01 bounty on make.fun](https://make.fun/bounty/gta6-cover-art-01).
 
-## How it works
+## What it does
 
-1. **Drop in photos** — drag and drop or pick files; they never leave your
-   machine. Three sample photos ship with the app so you can try it at once.
-2. **Pick a layout** — six poster layouts: Hero + Strip, Nine-Panel Grid,
-   Full Bleed, Tilted Snapshots, Duo Split, and Tall Hero.
-3. **Place each photo** — click a photo, then a panel, to fill it. Click a
-   panel to select it, drag it to pan, scroll to zoom, or use the crop sliders.
-4. **Grade it** — six Vice City grades (Neon Sunset, Vice Pink, Teal Night,
-   Golden Hour, Hot Magenta, Mono Noir) with an intensity slider.
-5. **Letter it** — a bold Anton title with a sunset gradient, a Pacifico neon
-   subtitle, a badge ribbon, and a five-star heat meter.
-6. **Export** — one click writes every ticked size at once: 1:1 (1080×1080),
-   4:5 (1080×1350), 9:16 (1080×1920), and 16:9 (1920×1080) PNGs.
+Drop in your own photos (or use the built-in poster-art samples), pick one of
+eight multi-panel layouts, choose a neon-sunset Vice grade, letter it with a
+retro-chrome title and a neon script subtitle, add cast tags, a seal and a
+billing block — then export a PNG in 1:1, 4:5, 9:16 or 16:9 with one click.
+Everything runs on your machine; no photo is ever uploaded.
 
-Undo and redo cover every change. Everything runs in the browser from the
-app's own static files — no server, no upload, no network request.
+- **8 layouts** — Hero + Strip, Hero + Duo, Nine Panel, Tilted Snaps,
+  Full Bleed, Diagonal Split, Pop-Out Hero (the hero photo bursts out of its
+  frame, over the title), and Billboard.
+- **8 Vice grades** — Vice Sunset, Neon Pink, Gold Hour, Teal Heat, Magenta
+  Nights, Ocean Drive, Retro Chrome and Mono Noir, each with a glow slider.
+- **Any photo** — drag and drop, or a file picker; click a panel to select it,
+  drag to pan the photo inside it, scroll to zoom, or use the crop sliders.
+  One photo can fill every panel, or each panel can hold a different photo.
+- **Lettering** — a striped retro-chrome title, a glowing neon-script subtitle,
+  STARRING / FEATURING cast tags, a circular Vice Coast seal, and a billing
+  block along the bottom edge, all editable live.
+- **Fast** — a live preview updates as you work; Undo / Redo (Ctrl+Z / Ctrl+Y);
+  a Surprise-me button shuffles a fresh look; Export all sizes downloads every
+  post size at once.
 
-## Run it
+## Try it
+
+Serve the `app/` folder with any static server and open `index.html`:
 
 ```sh
 node serve.ts
 # open http://localhost:8080
 ```
 
-Or serve `app/` with any static server. The entry program hands the app in:
+No build step, no network requests. The app is plain static files: HTML, CSS
+and vanilla JavaScript on canvas 2D. Fonts Anton and Pacifico are vendored
+under `app/fonts/` under the SIL Open Font License (see `app/fonts/OFL.txt`).
 
-```sh
-mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-```
+## How a cover is made
 
-## What's inside
+The renderer (`app/src/cover.js`) paints each layout from unit-coordinate
+panels: flat panels first, then the pop-out hero with a hard shadow and a white
+keyline so it leaps off the page. Photos are cover-fit per panel with their own
+zoom and pan; empty slots fall back to a painted sunset skyline so a cover
+never looks broken. A warm wash, a vignette and deterministic film grain finish
+the grade, then the title is drawn in layers — drop shadow, gradient body,
+chrome stripes clipped to the letters, and a crisp outline — with the subtitle
+glowing beneath it in neon script.
 
-- `app/index.html` — the editor page
-- `app/style.css` — the Vice City editor chrome
-- `app/src/cover.js` — the cover engine: layouts, grades, lettering, grain
-- `app/src/main.js` — the editor: photos, crop, undo/redo, export
-- `app/src/shots.js` — fixed screenshot scenes (`?shot=cover|editor|export|grade`)
-- `app/fonts/` — Anton and Pacifico under the SIL Open Font License
-- `app/samples/` — sample photos: two made with an image model for make.fun,
-  one drawn procedurally with code (no real person, no GTA artwork)
-- `main.ts` — copies `app/` and `screenshots/` to `/output` and writes
-  `dossier.json` with the vendored make.fun library
-- `screenshots/` — the cover and the app at work
+The four sample photos under `app/samples/` are procedural poster art drawn
+with code (a palm boulevard, a convertible at golden hour, a pier over the
+ocean, a neon night street). No real person's photo and no Rockstar Games
+artwork, logo or font is used anywhere in this project.
 
-## Credits
+## Screenshots
 
-Original work by rendelsu, built for make.fun. Lettering uses Anton and
-Pacifico (SIL Open Font License, texts in `app/fonts/`). An original fan-made
-tool — not affiliated with Rockstar Games, and it uses no Rockstar logo,
-artwork, or font.
+`screenshots/` holds four frames taken from the app running in a browser:
+the exported 16:9 cover first, then the editor with a photo loaded, the
+export controls, and a second layout and grade.
 
-Made with make.fun — [join with my referral](https://make.fun/r/rkkz4bh8)
-(referral code: `rkkz4bh8`).
+## Notes
+
+- The entry program is `main.ts` (Node 22, standard library only): it copies
+  `app/` and `screenshots/` to the output directory and writes
+  `dossier.json` with the vendored make.fun library in `vendor/`.
+- This entry was built for make.fun — if you enter a bounty there too, my
+  referral link is https://make.fun/r/rkkz4bh8 (code `rkkz4bh8`).
+- License: MIT — see `LICENSE`.
+
+Made with an offline-first mindset: your photos stay yours.
